@@ -1,0 +1,341 @@
+---
+- name: Install kubeadm worker-0
+  hosts: worker-0
+  become: true
+  become_method: sudo
+  tasks:
+    - name: Update cache & Full system update
+      apt:
+        update_cache: true
+        upgrade: dist
+        cache_valid_time: 3600
+        force_apt_get: true
+    - name: Install apt-transport-https
+      apt:
+        pkg:  
+          - apt-transport-https 
+          - ca-certificates
+          - curl
+          - gpg
+        update_cache: yes
+    - name: Create dir keyrings
+      shell: "mkdir -p -m 755 /etc/apt/keyrings"
+      become: true
+    - name: Add GPG key
+      apt_key:
+        url: https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key
+        keyring:  /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    - name: This overwrites any existing kubernetes.list
+      shell: "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list"
+      become: true
+    - name: Install kubeadm
+      apt:
+        pkg:  
+          - kubelet
+          - kubeadm
+          - kubectl
+          - containerd
+        update_cache: yes
+      become: true
+    - name: Hold ver
+      shell: "apt-mark hold kubelet kubeadm kubectl"
+      become: true
+    - name: Switch ip_forward
+      shell: "modprobe br_netfilter | echo 'net.ipv4.ip_forward=1' >> /etc/sysctl.conf | echo 'net.bridge.bridge-nf-call-iptables=1' >> /etc/sysctl.conf | echo 'net.bridge.bridge-nf-call-arptables=1' >> /etc/sysctl.conf | echo 'net.bridge.bridge-nf-call-ip6tables=1' >> /etc/sysctl.conf | sysctl -p /etc/sysctl.conf"
+      changed_when: false
+      ignore_errors: True
+
+- name: Install kubeadm worker-1
+  hosts: worker-1
+  become: true
+  become_method: sudo
+  tasks:
+    - name: Update cache & Full system update
+      apt:
+        update_cache: true
+        upgrade: dist
+        cache_valid_time: 3600
+        force_apt_get: true
+    - name: Install apt-transport-https
+      apt:
+        pkg:  
+          - apt-transport-https 
+          - ca-certificates
+          - curl
+          - gpg
+        update_cache: yes
+    - name: Create dir keyrings
+      shell: "mkdir -p -m 755 /etc/apt/keyrings"
+      become: true
+    - name: Add GPG key
+      apt_key:
+        url: https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key
+        keyring:  /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    - name: This overwrites any existing kubernetes.list
+      shell: "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list"
+      become: true
+    - name: Install kubeadm
+      apt:
+        pkg:  
+          - kubelet
+          - kubeadm
+          - kubectl
+          - containerd
+        update_cache: yes
+      become: true
+    - name: Hold ver
+      shell: "apt-mark hold kubelet kubeadm kubectl"
+      become: true
+    - name: Switch ip_forward
+      shell: "modprobe br_netfilter | echo 'net.ipv4.ip_forward=1' >> /etc/sysctl.conf | echo 'net.bridge.bridge-nf-call-iptables=1' >> /etc/sysctl.conf | echo 'net.bridge.bridge-nf-call-arptables=1' >> /etc/sysctl.conf | echo 'net.bridge.bridge-nf-call-ip6tables=1' >> /etc/sysctl.conf | sysctl -p /etc/sysctl.conf"
+      changed_when: false
+      ignore_errors: True 
+
+- name: Install kubeadm master-cp-2
+  hosts: master-cp-2
+  become: true
+  become_method: sudo
+  handlers:
+  - name: Restart keepalived service
+    become: true
+    ansible.builtin.service:
+      name: keepalived
+      state: restarted
+  - name: Restart haproxy service
+    become: true
+    ansible.builtin.service:
+      name: haproxy
+      state: restarted
+  tasks:
+    - name: Update cache & Full system update
+      apt:
+        update_cache: true
+        upgrade: dist
+        cache_valid_time: 3600
+        force_apt_get: true
+    - name: Install apt-transport-https
+      apt:
+        pkg:  
+          - apt-transport-https 
+          - ca-certificates
+          - curl
+          - gpg
+        update_cache: yes
+    - name: Create dir keyrings
+      shell: "mkdir -p -m 755 /etc/apt/keyrings"
+      become: true
+    - name: Add GPG key
+      apt_key:
+        url: https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key
+        keyring:  /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    - name: This overwrites any existing kubernetes.list
+      shell: "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list"
+      become: true
+    - name: Install kubeadm
+      apt:
+        pkg:  
+          - kubelet
+          - kubeadm
+          - kubectl
+          - containerd
+          - keepalived 
+          - haproxy
+        update_cache: yes
+      become: true
+    - name: Hold ver
+      shell: "apt-mark hold kubelet kubeadm kubectl"
+      become: true
+    - name: Switch ip_forward
+      shell: "modprobe br_netfilter | echo 'net.ipv4.ip_forward=1' >> /etc/sysctl.conf | echo 'net.bridge.bridge-nf-call-iptables=1' >> /etc/sysctl.conf | echo 'net.bridge.bridge-nf-call-arptables=1' >> /etc/sysctl.conf | echo 'net.bridge.bridge-nf-call-ip6tables=1' >> /etc/sysctl.conf | sysctl -p /etc/sysctl.conf"
+      changed_when: false
+      ignore_errors: True
+    - name: Keepalived | Create config
+      become: true
+      ansible.builtin.template:
+        src: "templates/master-cp-2/keepalived.conf.j2"
+        dest: /etc/keepalived/keepalived.conf
+        mode: "0644"
+      # notify: Restart keepalived service
+    # - name: Flush handlers
+    #   ansible.builtin.meta: flush_handlers
+    # - name: Keepalived | enable
+    #   shell: "systemctl enable keepalived"
+    - name: HA-proxy | rm config
+      shell: "rm /etc/haproxy/haproxy.cfg"
+    - name: HA-proxy | Create config
+      become: true
+      ansible.builtin.template:
+        src: "templates/haproxy.cfg.j2"
+        dest: /etc/haproxy/haproxy.cfg
+        mode: "0644"
+    #   notify: Restart haproxy service
+    # - name: Flush handlers
+    #   ansible.builtin.meta: flush_handlers
+    # - name: HA-proxy | enable
+    #   shell: "systemctl enable haproxy"
+
+- name: Install kubeadm master-cp-1
+  hosts: master-cp-1
+  become: true
+  become_method: sudo
+  handlers:
+  - name: Restart keepalived service
+    become: true
+    ansible.builtin.service:
+      name: keepalived
+      state: restarted
+  - name: Restart haproxy service
+    become: true
+    ansible.builtin.service:
+      name: haproxy
+      state: restarted
+  tasks:
+    - name: Update cache & Full system update
+      apt:
+        update_cache: true
+        upgrade: dist
+        cache_valid_time: 3600
+        force_apt_get: true
+    - name: Install apt-transport-https
+      apt:
+        pkg:  
+          - apt-transport-https 
+          - ca-certificates
+          - curl
+          - gpg
+        update_cache: yes
+    - name: Create dir keyrings
+      shell: "mkdir -p -m 755 /etc/apt/keyrings"
+      become: true
+    - name: Add GPG key
+      apt_key:
+        url: https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key
+        keyring:  /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    - name: This overwrites any existing kubernetes.list
+      shell: "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list"
+      become: true
+    - name: Install kubeadm
+      apt:
+        pkg:  
+          - kubelet
+          - kubeadm
+          - kubectl
+          - containerd
+          - keepalived 
+          - haproxy
+        update_cache: yes
+      become: true
+    - name: Hold ver
+      shell: "apt-mark hold kubelet kubeadm kubectl"
+      become: true
+    - name: Switch ip_forward
+      shell: "modprobe br_netfilter | echo 'net.ipv4.ip_forward=1' >> /etc/sysctl.conf | echo 'net.bridge.bridge-nf-call-iptables=1' >> /etc/sysctl.conf | echo 'net.bridge.bridge-nf-call-arptables=1' >> /etc/sysctl.conf | echo 'net.bridge.bridge-nf-call-ip6tables=1' >> /etc/sysctl.conf | sysctl -p /etc/sysctl.conf"
+      changed_when: false
+      ignore_errors: True
+    - name: Keepalived | Create config
+      become: true
+      ansible.builtin.template:
+        src: "templates/master-cp-1/keepalived.conf.j2"
+        dest: /etc/keepalived/keepalived.conf
+        mode: "0644"
+      notify: Restart keepalived service
+    - name: Flush handlers
+      ansible.builtin.meta: flush_handlers
+    - name: Keepalived | enable
+      shell: "systemctl enable keepalived"
+    - name: HA-proxy | rm config
+      shell: "rm /etc/haproxy/haproxy.cfg"
+    - name: HA-proxy | Create config
+      become: true
+      ansible.builtin.template:
+        src: "templates/haproxy.cfg.j2"
+        dest: /etc/haproxy/haproxy.cfg
+        mode: "0644"
+      notify: Restart haproxy service
+    - name: Flush handlers
+      ansible.builtin.meta: flush_handlers
+    - name: HA-proxy | enable
+      shell: "systemctl enable haproxy"
+
+- name: Install kubeadm master-cp-0
+  hosts: master-cp-0
+  become: true
+  become_method: sudo
+  handlers:
+  - name: Restart keepalived service
+    become: true
+    ansible.builtin.service:
+      name: keepalived
+      state: restarted
+  - name: Restart haproxy service
+    become: true
+    ansible.builtin.service:
+      name: haproxy
+      state: restarted
+  tasks:
+    - name: Update cache & Full system update
+      apt:
+        update_cache: true
+        upgrade: dist
+        cache_valid_time: 3600
+        force_apt_get: true
+    - name: Install apt-transport-https
+      apt:
+        pkg:  
+          - apt-transport-https 
+          - ca-certificates
+          - curl
+          - gpg
+        update_cache: yes
+    - name: Create dir keyrings
+      shell: "mkdir -p -m 755 /etc/apt/keyrings"
+      become: true
+    - name: Add GPG key
+      apt_key:
+        url: https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key
+        keyring:  /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    - name: This overwrites any existing kubernetes.list
+      shell: "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list"
+      become: true
+    - name: Install kubeadm
+      apt:
+        pkg:  
+          - kubelet
+          - kubeadm
+          - kubectl
+          - containerd
+          - keepalived 
+          - haproxy
+        update_cache: yes
+      become: true
+    - name: Hold ver
+      shell: "apt-mark hold kubelet kubeadm kubectl"
+      become: true
+    - name: Switch ip_forward
+      shell: "modprobe br_netfilter | echo 'net.ipv4.ip_forward=1' >> /etc/sysctl.conf | echo 'net.bridge.bridge-nf-call-iptables=1' >> /etc/sysctl.conf | echo 'net.bridge.bridge-nf-call-arptables=1' >> /etc/sysctl.conf | echo 'net.bridge.bridge-nf-call-ip6tables=1' >> /etc/sysctl.conf | sysctl -p /etc/sysctl.conf"
+      changed_when: false
+      ignore_errors: True
+    - name: Keepalived | Create config
+      become: true
+      ansible.builtin.template:
+        src: "templates/master-cp-0/keepalived.conf.j2"
+        dest: /etc/keepalived/keepalived.conf
+        mode: "0644"
+      notify: Restart keepalived service
+    - name: Flush handlers
+      ansible.builtin.meta: flush_handlers
+    - name: Keepalived | enable
+      shell: "systemctl enable keepalived"
+    - name: HA-proxy | rm config
+      shell: "rm /etc/haproxy/haproxy.cfg"
+    - name: HA-proxy | Create config
+      become: true
+      ansible.builtin.template:
+        src: "templates/haproxy.cfg.j2"
+        dest: /etc/haproxy/haproxy.cfg
+        mode: "0644"
+      notify: Restart haproxy service
+    - name: Flush handlers
+      ansible.builtin.meta: flush_handlers
+    - name: HA-proxy | enable
+      shell: "systemctl enable haproxy"
