@@ -34,7 +34,7 @@
 [Playbook](playbook.yml)
 
 <p align="center">
-    <img width="1200 height="600" src="/img/asnible_playbook.png">
+    <img width="1200 height="600" src="/img/ansible_playbook.png">
 </p>
 
 3. Добавим в кластер worker-node-0
@@ -100,7 +100,7 @@
 [Playbook](HA-playbook.yml)
 
 <p align="center">
-    <img width="1200 height="600" src="/img/ha_asnible_playbook.png">
+    <img width="1200 height="600" src="/img/ha_ansible_playbook.png">
 </p>
 
 3. Конфиг keepalived
