@@ -110,7 +110,7 @@
 
 4. Рестарт keepalived
 <p align="center">
-    <img width="1200 height="600" src="/img/ha_keepallived_restart.png">
+    <img width="1200 height="600" src="/img/ha_keepalived_restart.png">
 </p>
 
 5. Virtual IP добавился на eth0
@@ -171,6 +171,59 @@
 </p>
 
 16. НО не удалось разобраться почему, в данный кластер, не получается присоединить worker ноды. При добавлении worker ноды, виснет в статусе - [preflight] Running pre-flight.
+
+
+| UPD |
+| :---: |
+```
+Создаю три мастер-ноды: 10.0.1.16, 10.0.1.30, 10.0.1.34. Keepalived поднимает ip кластера - 10.0.1.100, который явлеется Secondary IP на eth0 каждой мастер-ноде.
+```
+
+**На первом управляющем узле (10.0.1.16) выполняем:**
+```
+kubeadm init \
+               --pod-network-cidr=10.0.1.0/24 \
+               --control-plane-endpoint "10.0.1.100:8443" \
+               --upload-certs
+```
+
+<p align="center">
+    <img width="1200 height="600" src="/img/upd_ha_mn1_kubeadm_init.png">
+</p>
+
+**На втором и третьем управляющих узлах выполняем добавление к control-plane:**
+```
+kubeadm join 10.0.1.100:8443 --token bkdamw.x6a710qf92vcxokw \
+    --discovery-token-ca-cert-hash sha256:e772a2cb8b1c33139c2538fa8f6f4570403685fe6109a300d49ccea67d779619 \
+    --control-plane \ 
+    --certificate-key 8f5923ca0ab5078cc48cbc04a01ea8a988c1c13e473ed9bdc4664738006647d2
+```
+
+<p align="center">
+    <img width="1200 height="600" src="/img/upd_ha_mn2_add.png">
+</p>
+
+<p align="center">
+    <img width="1200 height="600" src="/img/upd_ha_mn3_add.png">
+</p>
+
+**Подключаем воркер-ноду к адресу control-plane:**
+```
+kubeadm join 10.0.1.100:8443 --token bkdamw.x6a710qf92vcxokw \
+    --discovery-token-ca-cert-hash sha256:e772a2cb8b1c33139c2538fa8f6f4570403685fe6109a300d49ccea67d779619
+```
+
+<p align="center">
+    <img width="1200 height="600" src="/img/upd_wn1_add.png">
+</p>
+
+<p align="center">
+    <img width="1200 height="600" src="/img/upd_wn1_add_err.png">
+</p>
+
+**Не получается присоединить worker ноды. При добавлении worker ноды, виснет в статусе - [preflight] Running pre-flight**
+
+
 
 ### Правила приёма работы
 
