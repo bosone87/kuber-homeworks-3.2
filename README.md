@@ -224,6 +224,62 @@ kubeadm join 10.0.1.100:8443 --token bkdamw.x6a710qf92vcxokw \
 **Не получается присоединить worker ноды. При добавлении worker ноды, виснет в статусе - [preflight] Running pre-flight**
 
 
+| UPD |
+| :---: |
+```
+Создал HA-кластер на keepalived и haproxy, 3 мастер ноды, 2 воркера.
+Воркер-ноды удалось подключить, после настройки статического маршрута в vpc yandex cloud. 
+```
+**ВМ Yandex Cloud**
+<p align="center">
+    <img width="1200 height="600" src="/img/upd2_ha_vm_yc.png">
+</p>
+
+**Playbook**
+<p align="center">
+    <img width="1200 height="600" src="/img/upd2_ha_ansible_play.png">
+</p>
+
+**Kubeadm init**
+<p align="center">
+    <img width="1200 height="600" src="/img/upd2_ha_kubeadm_init.png">
+</p>
+
+**Add master-cp-0**
+<p align="center">
+    <img width="1200 height="600" src="/img/upd2_ha_m2_add.png">
+</p>
+
+**Add master-cp-1**
+<p align="center">
+    <img width="1200 height="600" src="/img/upd2_ha_m3_add.png">
+</p>
+
+**Add master-cp-2**
+<p align="center">
+    <img width="1200 height="600" src="/img/upd2_ha_w1_add.png">
+</p>
+
+**Add static route**
+<p align="center">
+    <img width="1200 height="600" src="/img/upd2_ha_yc_vpc_static_route.png">
+</p>
+
+**Add worker-0**
+<p align="center">
+    <img width="1200 height="600" src="/img/upd2_ha_w1_add.png">
+</p>
+
+**Add worker-1**
+<p align="center">
+    <img width="1200 height="600" src="/img/upd2_ha_w2_add.png">
+</p>
+
+**Kubectl get nodes**
+<p align="center">
+    <img width="1200 height="600" src="/img/upd2_ha_get_nodes.png">
+</p>
+
 
 ### Правила приёма работы
 
